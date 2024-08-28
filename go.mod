@@ -1,4 +1,4 @@
-module github.com/canhlinh/gozk
+module github.com/stones-hub/go-zkteco
 
 require (
 	github.com/canhlinh/go-binary-pack v0.0.0-20181203110405-72348cf47f32
@@ -9,6 +9,7 @@ require (
 	github.com/peterbourgon/g2s v0.0.0-20170223122336-d4e7ad98afea // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.3.0
+	golang.org/x/text v0.17.0 // indirect
 )
 
 go 1.13

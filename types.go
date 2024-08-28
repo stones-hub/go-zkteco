@@ -15,6 +15,8 @@ type Response struct {
 }
 
 type User struct {
+	Uid  int
+	Name string
 }
 
 type Attendance struct {

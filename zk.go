@@ -3,6 +3,8 @@ package gozk
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"io"
 	"log"
 	"net"
@@ -203,6 +205,49 @@ func (zk *ZK) DisableDevice() error {
 	return nil
 }
 
+func (zk *ZK) GetUsersByK3() {
+	var records int
+	var err error
+
+	if records, err = zk.readSize(); err != nil {
+		fmt.Printf("zk read size error: %s", err)
+		return
+	}
+
+	userdata, size, err := zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
+	if err != nil {
+		fmt.Printf("zk  readWithBuffer for userdata error: %s", err)
+		return
+	}
+
+	if size <= 4 {
+		fmt.Printf("size too short can't been read .")
+		return
+	}
+
+	totalSize := mustUnpack([]string{"I"}, userdata[:4])[0].(int)
+
+	if totalSize/records == 8 || totalSize/records == 16 {
+		fmt.Printf("Sorry I don't support this kind of device. I'm lazy!  totalSize = %d ; size = %d\n", totalSize, size)
+		return
+	}
+
+	// 重新赋值
+	userdata = userdata[4:]
+
+	for len(userdata) >= 72 { // 只处理72
+		if v, err := newBP().UnPack([]string{"H", "B", "8s", "24s", "I", "7s", "24s"}, userdata[:72]); err != nil {
+			fmt.Printf("userdata unpack err : %v\n", err)
+			return
+		} else {
+			name, _ := gbkByte2String([]byte(v[3].(string)))
+			// 1214
+			fmt.Printf("uid: %d, name: %s, v : %+v\n", v[4], name, v)
+		}
+		userdata = userdata[72:]
+	}
+}
+
 // GetAttendances returns a list of attendances
 func (zk *ZK) GetAttendances() ([]*Attendance, error) {
 	if err := zk.GetUsers(); err != nil {
@@ -262,12 +307,10 @@ func (zk *ZK) GetAttendances() ([]*Attendance, error) {
 // GetUsers returns a list of users
 // For now, just run this func. I'll implement this function later on.
 func (zk *ZK) GetUsers() error {
-
 	_, err := zk.readSize()
 	if err != nil {
 		return err
 	}
-
 	_, size, err := zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
 	if err != nil {
 		return err
@@ -276,8 +319,18 @@ func (zk *ZK) GetUsers() error {
 	if size < 4 {
 		return nil
 	}
-
 	return nil
+}
+
+func gbkByte2String(b []byte) (string, error) {
+	// 创建一个GBK解码器
+	decoder := simplifiedchinese.GBK.NewDecoder()
+	// 使用解码器将gbkBytes转换为UTF-8编码的字符串
+	utf8String, _, err := transform.String(decoder, string(b))
+	if err != nil {
+		return "", err
+	}
+	return utf8String, nil
 }
 
 func (zk *ZK) LiveCapture() (chan *Attendance, error) {
