@@ -15,7 +15,7 @@ type Response struct {
 }
 
 type User struct {
-	Uid  int
+	Uid  string
 	Name string
 }
 

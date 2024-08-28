@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	gozk "github.com/stones-hub/go-zkteco"
 	"log"
 	"os"
@@ -28,7 +29,17 @@ func main() {
 		}
 	*/
 
-	zkSocket.GetUsersByK3()
+	users, err := zkSocket.GetCanteenUsers()
+
+	if err != nil {
+		fmt.Printf("err : %v\n", err)
+	} else {
+		for _, user := range users {
+			fmt.Println(user.Name, user.Uid)
+			break
+		}
+	}
+
 }
 
 func gracefulQuit(f func()) {

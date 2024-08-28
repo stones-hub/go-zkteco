@@ -205,47 +205,54 @@ func (zk *ZK) DisableDevice() error {
 	return nil
 }
 
-func (zk *ZK) GetUsersByK3() {
+func (zk *ZK) GetCanteenUsers() ([]*User, error) {
 	var records int
 	var err error
 
 	if records, err = zk.readSize(); err != nil {
 		fmt.Printf("zk read size error: %s", err)
-		return
+		return nil, err
 	}
 
 	userdata, size, err := zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
 	if err != nil {
 		fmt.Printf("zk  readWithBuffer for userdata error: %s", err)
-		return
+		return nil, err
 	}
 
 	if size <= 4 {
 		fmt.Printf("size too short can't been read .")
-		return
+		return nil, errors.New("size too short can't been read .")
 	}
 
 	totalSize := mustUnpack([]string{"I"}, userdata[:4])[0].(int)
 
 	if totalSize/records == 8 || totalSize/records == 16 {
 		fmt.Printf("Sorry I don't support this kind of device. I'm lazy!  totalSize = %d ; size = %d\n", totalSize, size)
-		return
+		return nil, errors.New("Sorry I don't support this kind of device. I'm lazy!")
 	}
 
 	// 重新赋值
 	userdata = userdata[4:]
+	users := make([]*User, 0)
 
 	for len(userdata) >= 72 { // 只处理72
 		if v, err := newBP().UnPack([]string{"H", "B", "8s", "24s", "I", "7s", "24s"}, userdata[:72]); err != nil {
 			fmt.Printf("userdata unpack err : %v\n", err)
-			return
+			return nil, err
 		} else {
+			// fmt.Printf("userdata unpack len(v) : %+v - %+v - %+v - %+v \n", len(v), v[3], v[6], v)
+
 			name, _ := gbkByte2String([]byte(v[3].(string)))
-			// 1214
-			fmt.Printf("uid: %d, name: %s, v : %+v\n", v[4], name, v)
+			users = append(users, &User{
+				Name: name,
+				Uid:  strings.TrimSpace(v[6].(string)),
+			})
 		}
 		userdata = userdata[72:]
 	}
+
+	return users, nil
 }
 
 // GetAttendances returns a list of attendances
