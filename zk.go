@@ -245,7 +245,7 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 
 			name, _ := gbkByte2String([]byte(v[3].(string)))
 			users = append(users, &User{
-				Name: name,
+				Name: strings.Replace(name, "\u0000", "", -1),
 				Uid:  strings.Replace(v[6].(string), "\x00", "", -1),
 			})
 		}
