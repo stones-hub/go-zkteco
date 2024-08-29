@@ -206,15 +206,23 @@ func (zk *ZK) DisableDevice() error {
 }
 
 func (zk *ZK) GetZktecoUsers() ([]*User, error) {
-	var records int
-	var err error
+	var (
+		records   int
+		err       error
+		userdata  []byte
+		size      int
+		totalSize int
+		users     = make([]*User, 0)
+		v         []interface{}
+		name      string
+	)
 
 	if records, err = zk.readSize(); err != nil {
 		fmt.Printf("zk read size error: %s", err)
 		return nil, err
 	}
 
-	userdata, size, err := zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
+	userdata, size, err = zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
 	if err != nil {
 		fmt.Printf("zk  readWithBuffer for userdata error: %s", err)
 		return nil, err
@@ -222,11 +230,10 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 
 	if size <= 4 {
 		fmt.Printf("size too short can't been read .")
-		return nil, errors.New("size too short can't been read .")
+		return nil, errors.New("size too short can't been read")
 	}
 
-	totalSize := mustUnpack([]string{"I"}, userdata[:4])[0].(int)
-
+	totalSize = mustUnpack([]string{"I"}, userdata[:4])[0].(int)
 	if totalSize/records == 8 || totalSize/records == 16 {
 		fmt.Printf("Sorry I don't support this kind of device. I'm lazy!  totalSize = %d ; size = %d\n", totalSize, size)
 		return nil, errors.New("Sorry I don't support this kind of device. I'm lazy!")
@@ -234,19 +241,18 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 
 	// 重新赋值
 	userdata = userdata[4:]
-	users := make([]*User, 0)
-
 	for len(userdata) >= 72 { // 只处理72
-		if v, err := newBP().UnPack([]string{"H", "B", "8s", "24s", "I", "7s", "24s"}, userdata[:72]); err != nil {
+		v, err = newBP().UnPack([]string{"H", "B", "8s", "24s", "I", "7s", "24s"}, userdata[:72])
+		if err != nil {
 			fmt.Printf("userdata unpack err : %v\n", err)
 			return nil, err
-		} else {
-			name, _ := gbkByte2String([]byte(v[3].(string)))
-			users = append(users, &User{
-				Name: strings.Replace(name, "\u0000", "", -1),
-				Uid:  strings.Replace(v[6].(string), "\x00", "", -1),
-			})
 		}
+
+		name, _ = gbkByte2String([]byte(v[3].(string)))
+		users = append(users, &User{
+			Name: strings.Replace(name, "\u0000", "", -1),
+			Uid:  strings.Replace(v[6].(string), "\x00", "", -1),
+		})
 		userdata = userdata[72:]
 	}
 
