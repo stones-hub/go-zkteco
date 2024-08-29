@@ -29,7 +29,7 @@ func main() {
 		}
 	*/
 
-	users, err := zkSocket.GetCanteenUsers()
+	users, err := zkSocket.GetZktecoUsers()
 
 	if err != nil {
 		fmt.Printf("err : %v\n", err)

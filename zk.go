@@ -205,7 +205,7 @@ func (zk *ZK) DisableDevice() error {
 	return nil
 }
 
-func (zk *ZK) GetCanteenUsers() ([]*User, error) {
+func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 	var records int
 	var err error
 
