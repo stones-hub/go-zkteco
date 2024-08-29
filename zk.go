@@ -224,7 +224,7 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 
 	userdata, size, err = zk.readWithBuffer(CMD_USERTEMP_RRQ, FCT_USER, 0)
 	if err != nil {
-		fmt.Printf("zk  readWithBuffer for userdata error: %s", err)
+		fmt.Printf("zk readWithBuffer for userdata error: %s", err)
 		return nil, err
 	}
 
@@ -281,18 +281,15 @@ func (zk *ZK) GetAttendances() ([]*Attendance, error) {
 
 	totalSizeByte := data[:4]
 	data = data[4:]
-
 	totalSize := mustUnpack([]string{"I"}, totalSizeByte)[0].(int)
 	recordSize := totalSize / records
-	attendances := []*Attendance{}
+	attendances := make([]*Attendance, 0)
 
 	if recordSize == 8 || recordSize == 16 {
 		return nil, errors.New("Sorry I don't support this kind of device. I'm lazy")
-
 	}
 
 	for len(data) >= 40 {
-
 		v, err := newBP().UnPack([]string{"H", "24s", "B", "4s", "B", "8s"}, data[:40])
 		if err != nil {
 			return nil, err
