@@ -241,8 +241,6 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 			fmt.Printf("userdata unpack err : %v\n", err)
 			return nil, err
 		} else {
-			// fmt.Printf("userdata unpack len(v) : %+v - %+v - %+v - %+v \n", len(v), v[3], v[6], v)
-
 			name, _ := gbkByte2String([]byte(v[3].(string)))
 			users = append(users, &User{
 				Name: strings.Replace(name, "\u0000", "", -1),
