@@ -261,10 +261,11 @@ func (zk *ZK) GetZktecoUsers() ([]*User, error) {
 
 // GetAttendances returns a list of attendances
 func (zk *ZK) GetAttendances() ([]*Attendance, error) {
-	if err := zk.GetUsers(); err != nil {
-		return nil, err
-	}
-
+	/*
+		if err := zk.GetUsers(); err != nil {
+			return nil, err
+		}
+	*/
 	records, err := zk.readSize()
 	if err != nil {
 		return nil, err
@@ -286,7 +287,7 @@ func (zk *ZK) GetAttendances() ([]*Attendance, error) {
 	attendances := make([]*Attendance, 0)
 
 	if recordSize == 8 || recordSize == 16 {
-		return nil, errors.New("Sorry I don't support this kind of device. I'm lazy")
+		return nil, errors.New("sorry I don't support this kind of device. I'm lazy")
 	}
 
 	for len(data) >= 40 {
